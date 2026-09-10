@@ -155,7 +155,7 @@ The application has been verified according to the repository guidelines:
 1. **Static Analysis:**
    - `flutter analyze` passes with **0 warnings and 0 errors**.
 2. **Automated Test Suite:**
-   - `flutter test` executes **15/15 unit and widget tests** cleanly:
+   - `flutter test` executes **21/21 unit and widget tests** cleanly:
      - Breathing cycle calculations and phase timing.
      - Immutable session snapshot integrity.
      - Streak calculation (consecutive days, multi-session days, broken streaks).
@@ -164,11 +164,19 @@ The application has been verified according to the repository guidelines:
      - App navigation, tab transitions, and reactive data streams.
      - Tablet responsive NavigationRail layout assertion.
      - Meditation launcher integration: "Start Meditation" navigation via `_navigatorKey` and clean session teardown.
+     - Preparation timer instant handoff and active session clock startup.
+     - Auto-discard rule for sessions under 5 seconds (zero SQLite persistence or achievement mutations).
+     - Session preservation for sessions >= 5 seconds.
+     - `RunningTimerDisplay` colon pulse animation and paused freeze states.
+     - `LivingAmbientAura` dynamic breathing and minimal mode rendering.
 3. **Resource Lifecycle & Navigation Architecture:**
    - Root navigation uses a `GlobalKey<NavigatorState>` bound to `MaterialApp`, ensuring `_startMeditation` can launch `ActiveMeditationScreen` from any context or modal sheet.
    - `ActiveMeditationScreen` properly disposes `SessionController` on unmount, ensuring ticker timers, wakelock, and audio playback are cleanly stopped without memory leaks or dangling timers.
    - Drift query stream subscriptions unmount without dangling timers or memory leaks.
-   - Audio and notification resources are safely disposed.
+   - Audio operations (`playBell`, `startBackgroundSound`, `resumeBackgroundSound`) run non-blocking (`unawaited`) so ExoPlayer playback initialization does not stall Dart event loops, ticker timers, or screen transitions.
+   - Automatic short-session discard (< 5 seconds) dismisses `ActiveMeditationScreen` directly back to the Meditate tab with a floating notification banner, bypassing the post-session journal.
+   - Running timer features a Cupertino-style animated colon (`:`) pulsing at 1 Hz when running and solid when paused.
+   - Minimal meditation types (`silentTimer`, `focus`, `openAwareness`, `sleep`) utilize `LivingAmbientAura` to provide an organic, calm 6-second breathing rhythm.
 
 ---
 
@@ -178,6 +186,7 @@ The application has been verified according to the repository guidelines:
 - **Modifying Database Schema:** Update `lib/data/database/database.dart`, increment `schemaVersion`, and execute `dart run build_runner build --delete-conflicting-outputs`.
 - **Adding Audio Assets:** Add WAV or MP3 files to `assets/audio/`, declare them in `pubspec.yaml`, and register them in `lib/core/audio/audio_constants.dart`.
 - **Android Core Library Desugaring:** Enabled in `android/app/build.gradle.kts` via `isCoreLibraryDesugaringEnabled = true` and `desugar_jdk_libs:2.1.4` to support `flutter_local_notifications` java.time desugaring on Android API < 26.
+- **Short Session Discard Threshold:** Configured via `SessionController.minSaveThresholdSeconds` (default: `5`). Sessions finalized below this threshold bypass database logging and achievement evaluations.
 
 ---
 

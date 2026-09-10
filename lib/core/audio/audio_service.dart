@@ -83,11 +83,11 @@ class AppAudioService {
 
       if (fadeInSeconds > 0) {
         await _bgPlayer.setVolume(0.0);
-        await _bgPlayer.play();
+        unawaited(_bgPlayer.play());
         _fadeIn(targetVolume, fadeInSeconds);
       } else {
         await _bgPlayer.setVolume(targetVolume);
-        await _bgPlayer.play();
+        unawaited(_bgPlayer.play());
       }
     } catch (e) {
       debugPrint('Error starting background sound: $e');
@@ -149,7 +149,7 @@ class AppAudioService {
 
   Future<void> resumeBackgroundSound() async {
     await _audioSession?.setActive(true);
-    await _bgPlayer.play();
+    unawaited(_bgPlayer.play());
   }
 
   Future<void> stopBackgroundSound() async {
@@ -172,7 +172,7 @@ class AppAudioService {
       await _bellPlayer.setAsset(sound.assetPath);
       await _bellPlayer.setLoopMode(LoopMode.off);
       await _bellPlayer.setVolume(volume.clamp(0.0, 1.0));
-      await _bellPlayer.play();
+      unawaited(_bellPlayer.play());
     } catch (e) {
       debugPrint('Error playing bell sound: $e');
     }
@@ -192,7 +192,7 @@ class AppAudioService {
       await _previewPlayer.setAsset(sound.assetPath);
       await _previewPlayer.setLoopMode(isBell ? LoopMode.off : LoopMode.one);
       await _previewPlayer.setVolume(volume.clamp(0.0, 1.0));
-      await _previewPlayer.play();
+      unawaited(_previewPlayer.play());
     } catch (e) {
       debugPrint('Error playing preview: $e');
     }

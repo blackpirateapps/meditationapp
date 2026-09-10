@@ -3,6 +3,7 @@ import '../../../data/models/meditation_type.dart';
 import '../controllers/session_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import 'breathing_orb.dart';
+import 'living_ambient_aura.dart';
 
 class VisualGuidanceView extends StatelessWidget {
   final SessionController controller;
@@ -122,35 +123,11 @@ class VisualGuidanceView extends StatelessWidget {
   }
 
   Widget _buildFocusView(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.accentColor,
-            boxShadow: [
-              BoxShadow(
-                color: context.accentColor.withValues(alpha: 0.4),
-                blurRadius: 18,
-                spreadRadius: 4,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 48),
-        Text(
-          'Single-Pointed Focus',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            letterSpacing: 0.5,
-            color: context.textSecondaryColor,
-          ),
-        ),
-      ],
+    return LivingAmbientAura(
+      isRunning: controller.state == SessionState.active,
+      baseColor: context.accentColor,
+      baseSize: 24,
+      label: 'Single-Pointed Focus',
     );
   }
 
@@ -222,39 +199,30 @@ class VisualGuidanceView extends StatelessWidget {
 
   Widget _buildOpenAwarenessView(BuildContext context) {
     return Center(
-      child: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: context.textTertiaryColor.withValues(alpha: 0.4),
-        ),
+      child: LivingAmbientAura(
+        isRunning: controller.state == SessionState.active,
+        baseColor: context.textTertiaryColor,
+        baseSize: 14,
       ),
     );
   }
 
   Widget _buildSleepView(BuildContext context) {
     return Center(
-      child: Container(
-        width: 6,
-        height: 6,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.2),
-        ),
+      child: LivingAmbientAura(
+        isRunning: controller.state == SessionState.active,
+        baseColor: Colors.white.withValues(alpha: 0.6),
+        baseSize: 8,
       ),
     );
   }
 
   Widget _buildSilentTimerView(BuildContext context) {
     return Center(
-      child: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: context.textTertiaryColor.withValues(alpha: 0.3),
-        ),
+      child: LivingAmbientAura(
+        isRunning: controller.state == SessionState.active,
+        baseColor: context.accentColor.withValues(alpha: 0.7),
+        baseSize: 16,
       ),
     );
   }

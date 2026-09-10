@@ -47,6 +47,8 @@ class SessionController extends ChangeNotifier {
   final AchievementRepository achievementRepo;
   final AppAudioService audioService;
 
+  static const int minSaveThresholdSeconds = 5;
+
   late final SessionSnapshot snapshot;
   final String sessionId = const Uuid().v4();
 
@@ -63,6 +65,8 @@ class SessionController extends ChangeNotifier {
 
   int _elapsedSeconds = 0;
   int get elapsedSeconds => _elapsedSeconds;
+
+  bool get isDiscardable => _elapsedSeconds < minSaveThresholdSeconds;
 
   int get remainingSeconds {
     final rem = practice.durationSeconds - _elapsedSeconds;
@@ -124,15 +128,15 @@ class SessionController extends ChangeNotifier {
     if (_prepSecondsRemaining > 0) {
       _state = SessionState.preparing;
       _startPrepTimer();
+      notifyListeners();
     } else {
-      await _startActiveMeditation();
+      _startActiveMeditation();
     }
-    notifyListeners();
   }
 
   void _startPrepTimer() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_prepSecondsRemaining > 1) {
         _prepSecondsRemaining--;
         HapticService.selection(enabled: practice.hapticGuidance);
@@ -140,33 +144,33 @@ class SessionController extends ChangeNotifier {
       } else {
         _prepSecondsRemaining = 0;
         timer.cancel();
-        await _startActiveMeditation();
+        _startActiveMeditation();
       }
     });
   }
 
-  Future<void> _startActiveMeditation() async {
+  void _startActiveMeditation() {
     _state = SessionState.active;
     _actualStartTime = DateTime.now();
     _lastResumeTime = DateTime.now();
 
-    // Haptics & Start Bell
+    _startSessionClock();
+    notifyListeners();
+
+    // Haptics & Start Bell (asynchronous, non-blocking)
     HapticService.sessionStart(enabled: practice.hapticGuidance);
     if (practice.startSoundEnabled && practice.startSound != 'none') {
-      await audioService.playBell(practice.startSound);
+      unawaited(audioService.playBell(practice.startSound));
     }
 
-    // Start background looping sound with fade in
+    // Start background looping sound with fade in (asynchronous, non-blocking)
     if (practice.backgroundSound != 'none') {
-      await audioService.startBackgroundSound(
+      unawaited(audioService.startBackgroundSound(
         soundId: practice.backgroundSound,
         targetVolume: practice.backgroundSoundVolume,
         fadeInSeconds: practice.fadeInSeconds,
-      );
+      ));
     }
-
-    _startSessionClock();
-    notifyListeners();
   }
 
   void _startSessionClock() {
@@ -336,13 +340,22 @@ class SessionController extends ChangeNotifier {
   }
 
   Future<void> _completeSession() async {
-    _state = SessionState.completed;
     _ticker?.cancel();
+
+    if (_elapsedSeconds < minSaveThresholdSeconds) {
+      _state = SessionState.cancelled;
+      await audioService.stopAll();
+      await WakelockService.disable();
+      notifyListeners();
+      return;
+    }
+
+    _state = SessionState.completed;
 
     // Ending Bell & Haptics
     HapticService.sessionEnd(enabled: practice.hapticGuidance);
     if (practice.endingSoundEnabled && practice.endingSound != 'none') {
-      await audioService.playBell(practice.endingSound);
+      unawaited(audioService.playBell(practice.endingSound));
     }
 
     // Stop background audio
@@ -355,7 +368,7 @@ class SessionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<MeditationSession> finalizeSession({
+  Future<MeditationSession?> finalizeSession({
     SessionStatus? forcedStatus,
     String? mood,
     String? note,
@@ -363,6 +376,11 @@ class SessionController extends ChangeNotifier {
     _ticker?.cancel();
     await audioService.stopAll();
     await WakelockService.disable();
+
+    if (_elapsedSeconds < minSaveThresholdSeconds) {
+      _state = SessionState.cancelled;
+      return null;
+    }
 
     final status = forcedStatus ??
         (_elapsedSeconds >= (practice.durationSeconds * 0.9)

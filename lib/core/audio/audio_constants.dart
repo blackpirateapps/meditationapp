@@ -143,6 +143,13 @@ class AudioConstants {
     for (final b in allBells) {
       if (b.id == id) return b;
     }
+    // Check with 'bell_' prefix if omitted
+    if (!id.startsWith('bell_')) {
+      final bellVariant = 'bell_$id';
+      for (final b in allBells) {
+        if (b.id == bellVariant) return b;
+      }
+    }
     return none;
   }
 }

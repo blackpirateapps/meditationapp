@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/session_controller.dart';
 import '../widgets/visual_guidance_view.dart';
 import '../widgets/meditation_controls_overlay.dart';
+import '../widgets/running_timer_display.dart';
 import 'completion_journal_screen.dart';
 import '../../../data/models/meditation_session.dart';
 import '../../../data/models/meditation_type.dart';
@@ -58,6 +59,18 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
 
     if (!mounted) return;
 
+    if (initialSession == null) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Session under 5s discarded, not saved to history'),
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final sessionRepo = controller.sessionRepo;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -96,11 +109,7 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
     }
   }
 
-  String _formatTime(int totalSeconds) {
-    final m = totalSeconds ~/ 60;
-    final s = totalSeconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -129,10 +138,13 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
                 _toggleControls();
                 return;
               }
+              final isUnder5s = controller.isDiscardable;
               final confirmed = await AppDialog.showConfirmation(
                 context,
                 title: 'End meditation?',
-                content: 'Your current progress will be recorded.',
+                content: isUnder5s
+                    ? 'Meditation under 5 seconds will not be saved.'
+                    : 'Your current progress will be recorded.',
                 confirmLabel: 'End session',
                 cancelLabel: 'Continue meditating',
                 isDestructive: true,
@@ -224,16 +236,11 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
   Widget _buildActiveView(SessionController controller, Color textColor) {
     return Column(
       children: [
-        // Top Remaining / Elapsed Time
-        Text(
-          _formatTime(controller.remainingSeconds),
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w300,
-            letterSpacing: -0.5,
-            color: textColor.withValues(alpha: 0.85),
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+        // Top Remaining / Elapsed Time with Pulsing Colon
+        RunningTimerDisplay(
+          totalSeconds: controller.remainingSeconds,
+          isRunning: controller.state == SessionState.active,
+          textColor: textColor,
         ),
         const Spacer(),
 

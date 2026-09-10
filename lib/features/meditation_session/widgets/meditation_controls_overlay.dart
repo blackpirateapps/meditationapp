@@ -136,10 +136,13 @@ class MeditationControlsOverlay extends StatelessWidget {
   }
 
   void _confirmEndMeditation(BuildContext context) async {
+    final isUnder5s = controller.isDiscardable;
     final confirmed = await AppDialog.showConfirmation(
       context,
       title: 'End meditation?',
-      content: 'Your current progress will be recorded in history.',
+      content: isUnder5s
+          ? 'Meditation under 5 seconds will not be saved.'
+          : 'Your current progress will be recorded in history.',
       confirmLabel: 'End session',
       cancelLabel: 'Continue meditating',
       isDestructive: true,
