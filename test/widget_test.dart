@@ -9,6 +9,7 @@ import 'package:meditationapp/data/repositories/settings_repository.dart';
 import 'package:meditationapp/core/audio/audio_service.dart';
 import 'package:meditationapp/core/notifications/notification_service.dart';
 import 'package:meditationapp/app/app.dart';
+import 'package:meditationapp/features/meditation_session/screens/active_meditation_screen.dart';
 
 void main() {
   late AppDatabase db;
@@ -106,6 +107,43 @@ void main() {
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
 
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Start Meditation launches ActiveMeditationScreen and cleans up',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      StillnessApp(
+        database: db,
+        practiceRepo: practiceRepo,
+        sessionRepo: sessionRepo,
+        achievementRepo: achievementRepo,
+        settingsRepo: settingsRepo,
+        audioService: audioService,
+        notificationService: notificationService,
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verify 'Start Meditation' button is present on the Meditate dashboard
+    final startBtn = find.text('Start Meditation');
+    expect(startBtn, findsWidgets);
+
+    // Tap Start Meditation
+    await tester.tap(startBtn.first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify ActiveMeditationScreen is displayed
+    expect(find.byType(ActiveMeditationScreen), findsOneWidget);
+
+    // Unmount and verify complete cleanup with no pending timers
     await tester.pumpWidget(const SizedBox());
     await tester.pumpAndSettle();
   });

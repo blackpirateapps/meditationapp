@@ -407,6 +407,7 @@ class SessionController extends ChangeNotifier {
   @override
   void dispose() {
     _ticker?.cancel();
+    audioService.stopAll();
     WakelockService.disable();
     super.dispose();
   }

@@ -44,6 +44,8 @@ class _StillnessAppState extends State<StillnessApp> {
   ThemeMode _themeMode = ThemeMode.system;
   int _currentIndex = 0;
 
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +68,7 @@ class _StillnessAppState extends State<StillnessApp> {
       audioService: widget.audioService,
     );
 
-    Navigator.of(context).push(
+    _navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (ctx) => ActiveMeditationScreen(controller: controller),
         fullscreenDialog: true,
@@ -77,6 +79,7 @@ class _StillnessAppState extends State<StillnessApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'Stillness',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

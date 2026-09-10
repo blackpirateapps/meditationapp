@@ -155,7 +155,7 @@ The application has been verified according to the repository guidelines:
 1. **Static Analysis:**
    - `flutter analyze` passes with **0 warnings and 0 errors**.
 2. **Automated Test Suite:**
-   - `flutter test` executes **14/14 unit and widget tests** cleanly:
+   - `flutter test` executes **15/15 unit and widget tests** cleanly:
      - Breathing cycle calculations and phase timing.
      - Immutable session snapshot integrity.
      - Streak calculation (consecutive days, multi-session days, broken streaks).
@@ -163,7 +163,10 @@ The application has been verified according to the repository guidelines:
      - Backup JSON export, serialization, and import restoration.
      - App navigation, tab transitions, and reactive data streams.
      - Tablet responsive NavigationRail layout assertion.
-3. **Resource Lifecycle:**
+     - Meditation launcher integration: "Start Meditation" navigation via `_navigatorKey` and clean session teardown.
+3. **Resource Lifecycle & Navigation Architecture:**
+   - Root navigation uses a `GlobalKey<NavigatorState>` bound to `MaterialApp`, ensuring `_startMeditation` can launch `ActiveMeditationScreen` from any context or modal sheet.
+   - `ActiveMeditationScreen` properly disposes `SessionController` on unmount, ensuring ticker timers, wakelock, and audio playback are cleanly stopped without memory leaks or dangling timers.
    - Drift query stream subscriptions unmount without dangling timers or memory leaks.
    - Audio and notification resources are safely disposed.
 

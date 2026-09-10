@@ -38,6 +38,7 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
   void dispose() {
     widget.controller.removeListener(_onControllerUpdate);
     _overlayHideTimer?.cancel();
+    widget.controller.dispose();
     super.dispose();
   }
 
@@ -57,6 +58,7 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
 
     if (!mounted) return;
 
+    final sessionRepo = controller.sessionRepo;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 400),
@@ -67,7 +69,7 @@ class _ActiveMeditationScreenState extends State<ActiveMeditationScreen> {
               mood: mood,
               note: note,
             );
-            await controller.sessionRepo.saveSession(updated);
+            await sessionRepo.saveSession(updated);
           },
         ),
         transitionsBuilder: (ctx, anim, secAnim, child) {
