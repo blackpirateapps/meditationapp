@@ -41,27 +41,30 @@ jobs:
         run: flutter test
 
       - name: Configure Android Signing Keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "Configuring release keystore from repository secrets..."
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-          
-          KEY_PASS="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
-          
-          cat <<EOF > android/key.properties
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASS
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-          
-          chmod 600 android/app/upload-keystore.jks android/key.properties
-          echo "Keystore and key.properties created successfully."
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Configuring release keystore from repository secrets..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            
+            KEY_PASS="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            
+            cat <<EOF > android/key.properties
+            storePassword=$KEYSTORE_PASSWORD
+            keyPassword=$KEY_PASS
+            keyAlias=$KEY_ALIAS
+            storeFile=upload-keystore.jks
+            EOF
+            
+            chmod 600 android/app/upload-keystore.jks android/key.properties
+            echo "Keystore and key.properties created successfully."
+          else
+            echo "KEYSTORE_BASE64 is not set; skipping release signing configuration."
+          fi
 
       - name: Build Android Release APK
         run: flutter build apk --release
