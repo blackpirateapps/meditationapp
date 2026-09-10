@@ -174,6 +174,7 @@ The application has been verified according to the repository guidelines:
 - **Adding New Meditation Types:** Add an enum value to `MeditationType`, implement corresponding guidance rendering in `lib/features/meditation_session/widgets/visual_guidance_view.dart`, and add default configuration in `lib/data/models/`.
 - **Modifying Database Schema:** Update `lib/data/database/database.dart`, increment `schemaVersion`, and execute `dart run build_runner build --delete-conflicting-outputs`.
 - **Adding Audio Assets:** Add WAV or MP3 files to `assets/audio/`, declare them in `pubspec.yaml`, and register them in `lib/core/audio/audio_constants.dart`.
+- **Android Core Library Desugaring:** Enabled in `android/app/build.gradle.kts` via `isCoreLibraryDesugaringEnabled = true` and `desugar_jdk_libs:2.1.4` to support `flutter_local_notifications` java.time desugaring on Android API < 26.
 
 ---
 
